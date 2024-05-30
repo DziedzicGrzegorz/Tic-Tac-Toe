@@ -43,10 +43,7 @@ var (
 			Bold(true).
 			Foreground(lipgloss.Color("#FFD700")). // Gold
 			Align(lipgloss.Center).
-			Background(lipgloss.Color("#0000FF")).
-			Padding(1, 2).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#FFD700"))
+			Padding(1, 2)
 
 	backgroundStyle = lipgloss.NewStyle().
 			Align(lipgloss.Center).
@@ -73,7 +70,7 @@ func initialModel(width, height int) model {
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.EnterAltScreen
+	return tea.SetWindowTitle("Tic-Tac-Toe Game")
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -82,16 +79,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.mode {
 		case modeMenu:
 			switch msg.String() {
-			case "up", "k":
+			case "up":
 				if m.cursor > 0 {
 					m.cursor--
 				}
-			case "down", "j":
+			case "down":
 				if m.cursor < len(m.menuItems)-1 {
 					m.cursor++
 				}
 			case "enter":
-				m.mode = m.menuItems[m.cursor].mode
+				switch m.cursor {
+				case 0:
+					m.mode = modeSinglePlayer
+				case 1:
+					game := NewGameModel(m.width, m.height)
+					return game, nil
+				case 2:
+					m.mode = modeStats
+				}
 			case "ctrl+c", "q", "esc":
 				return m, tea.Quit
 			}
@@ -121,7 +126,7 @@ func choicesView(m model) string {
 
 	menuSelect := lipgloss.JoinVertical(lipgloss.Left, choices...)
 
-	footer := subtleStyle.Render("j/k, up/down: select | enter: choose | q, esc: quit")
+	footer := subtleStyle.Render("up ↑ / down ↓ : select | enter: choose | q, esc: quit")
 
 	view := lipgloss.JoinVertical(lipgloss.Center,
 		titleStyle.Render(title),
@@ -166,7 +171,6 @@ func main() {
 		Long:  "A simple Tic-Tac-Toe game written in Go using the Bubble Tea library and the Lip Gloss library.",
 		Run: func(cmd *cobra.Command, args []string) {
 			p := tea.NewProgram(initialModel(0, 0), tea.WithAltScreen())
-			p.SetWindowTitle("Welcome to the game")
 			if _, err := p.Run(); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
