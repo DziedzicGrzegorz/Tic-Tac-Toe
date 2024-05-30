@@ -1,0 +1,35 @@
+builds:
+  - binary: Tic-Tac-Toe
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -mod=vendor
+
+release:
+  prerelease: auto
+
+universal_binaries:
+  - replace: true
+
+brews:
+  -
+    name: dziedzicgrzegorz
+    homepage: https://github.com/DziedzicGrzegorz/Tic-Tac-Toe
+
+    repository:
+      owner: DziedzicGrzegorz
+      name: homebrew-Tic-Tac-Toe
+    commit_author:
+      name: DziedzicGrzegorz
+      email: grzegorzdziedzic198@gmail.com
+    url_template:
+    license: MIT
+
+checksum:
+  name_template: 'checksums.txt'
