@@ -18,4 +18,14 @@ run:
 tests:
 	@echo "Running the tests"
 	@go test ./test
+
+lint:
+	@echo "Running the linter..."
+	@golangci-lint run
+
+watch:
+	@echo "Watching the files..."
+	@air
+
+
 .PHONY: all build install run
