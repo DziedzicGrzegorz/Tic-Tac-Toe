@@ -6,14 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-)
-
-var (
-	cellStyle     = lipgloss.NewStyle().Align(lipgloss.Center, lipgloss.Center).Width(5).Height(3).Border(lipgloss.NormalBorder())
-	boardStyle    = lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
-	headerStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FFD700")).Align(lipgloss.Center).Margin(0, 0, 2, 0)
-	errorStyle    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000")).Align(lipgloss.Center)
-	blinkingStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF")).Bold(true).Blink(true)
+	"github.com/dziedzicgrzegorz/Tic-Tac-Toe/constants"
 )
 
 type GameModel struct {
@@ -63,7 +56,7 @@ func (m *GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.winner = m.checkWinner()
 				if m.winner != 0 {
 					endMessage := fmt.Sprintf("Player %s wins!", m.currentMarker())
-					endGameModel := NewEndGameModel(m.width, m.height, endMessage, false)
+					endGameModel := NewEndGameModel(m.width, m.height, constants.WinMsgStyle.Render(endMessage))
 					//sleep for 500 ms for better UX
 					time.Sleep(500 * time.Millisecond)
 					return endGameModel, endGameModel.Init()
@@ -71,7 +64,8 @@ func (m *GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.turnCount--
 				if m.turnCount == 0 {
 					endMessage := "It's a draw!"
-					endGameModel := NewEndGameModel(m.width, m.height, endMessage, true)
+
+					endGameModel := NewEndGameModel(m.width, m.height, constants.DrawMsgStyle.Render(endMessage))
 					//sleep for 500 ms for better UX
 					time.Sleep(500 * time.Millisecond)
 					return endGameModel, endGameModel.Init()
@@ -173,17 +167,17 @@ func (m *GameModel) renderBoard() string {
 		cell := m.board[row][col]
 		cellStr := " "
 
-		style := cellStyle
+		style := constants.CellStyle
 
 		if i == m.cursor {
-			cellStr = blinkingStyle.Render(m.currentMarker())
+			cellStr = constants.BlinkingStyle.Render(m.currentMarker())
 		} else if cell == 1 {
 			cellStr = "X"
 		} else if cell == -1 {
 			cellStr = "O"
 		}
 
-		// Ustawianie granic
+		// Border styling for the cells because if we set a border for each side it has a margin
 		if col == 0 || col == 2 {
 			style = style.UnsetBorderLeft().UnsetBorderRight().UnsetBorderBottom()
 			if row == 0 {
@@ -200,13 +194,12 @@ func (m *GameModel) renderBoard() string {
 		cells = append(cells, style.Render(cellStr))
 	}
 
-	// Informacja o aktualnym graczu
 	currentPlayer := fmt.Sprintf("Current player: %s\n", m.currentMarker())
 
-	header := headerStyle.Render(currentPlayer)
+	header := constants.HeaderStyle.Render(currentPlayer)
 
-	// Informacja o grze
-	footer := subtleStyle.Render("j/k, up/down: move | h/l, left/right: move | enter: select | ctrl+c: quit")
+	// Quick help
+	footer := constants.SubtleStyle.Render("j/k, up/down: move | h/l, left/right: move | enter: select | ctrl+c: quit")
 
 	// Joining all cells horizontally
 	board := lipgloss.JoinVertical(lipgloss.Left,
@@ -214,16 +207,15 @@ func (m *GameModel) renderBoard() string {
 		lipgloss.JoinHorizontal(lipgloss.Left, cells[3], cells[4], cells[5]),
 		lipgloss.JoinHorizontal(lipgloss.Left, cells[6], cells[7], cells[8]))
 
-	// Wyświetlanie błędów, jeśli istnieją
 	errorMsg := ""
 	if m.errorMessage != "" {
-		errorMsg = errorStyle.Render(m.errorMessage)
+		errorMsg = constants.ErrorStyle.Render(m.errorMessage)
 	}
 
 	// Joining all elements vertically
 	view := lipgloss.JoinVertical(lipgloss.Center,
 		header,
-		boardStyle.Render(board),
+		constants.BoardStyle.Render(board),
 		errorMsg,
 		footer,
 	)

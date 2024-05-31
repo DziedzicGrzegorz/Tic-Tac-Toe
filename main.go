@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dziedzicgrzegorz/Tic-Tac-Toe/constants"
 	"github.com/spf13/cobra"
 )
 
@@ -13,9 +15,8 @@ type mode int
 
 const (
 	modeMenu mode = iota
-	modeSinglePlayer
 	modeMultiPlayer
-	modeStats
+	modeMultiTCP
 )
 
 type menuItem struct {
@@ -29,31 +30,9 @@ type model struct {
 	mode      mode
 	cursor    int
 	menuItems []menuItem
+	conn      net.Conn
+	player    string
 }
-
-var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Margin(1, 0, 2, 0).
-			Padding(0, 1).
-			Align(lipgloss.Center)
-
-	messageStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#FFD700")). // Gold
-			Align(lipgloss.Center).
-			Padding(1, 2)
-
-	backgroundStyle = lipgloss.NewStyle().
-			Align(lipgloss.Center).
-			Width(80).
-			Height(24)
-
-	normalStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	selectedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFD700")).Bold(true)
-	subtleStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Margin(2, 0, 0, 0)
-)
 
 func initialModel(width, height int) model {
 	return model{
@@ -62,9 +41,8 @@ func initialModel(width, height int) model {
 		height: height,
 		cursor: 0,
 		menuItems: []menuItem{
-			{mode: modeSinglePlayer, name: "Single Player"},
 			{mode: modeMultiPlayer, name: "Multiplayer"},
-			{mode: modeStats, name: "View Stats"},
+			{mode: modeMultiTCP, name: "Multiplayer TCP"},
 		},
 	}
 }
@@ -79,32 +57,32 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.mode {
 		case modeMenu:
 			switch msg.String() {
-			case "up":
+			case constants.Up:
 				if m.cursor > 0 {
 					m.cursor--
 				}
-			case "down":
+			case constants.Down:
 				if m.cursor < len(m.menuItems)-1 {
 					m.cursor++
 				}
-			case "enter":
+			case constants.Enter:
 				switch m.cursor {
 				case 0:
-					m.mode = modeSinglePlayer
-				case 1:
 					game := NewGameModel(m.width, m.height)
 					return game, nil
-				case 2:
-					m.mode = modeStats
+				case 1:
+					tcpInputModel := NewTCPInputModel(m.width, m.height)
+					return tcpInputModel, nil
+
 				}
-			case "ctrl+c", "q", "esc":
+			case constants.Quit, constants.CtrlC:
 				return m, tea.Quit
 			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		backgroundStyle = backgroundStyle.Width(m.width).Height(m.height)
+		constants.BackgroundStyle = constants.BackgroundStyle.Width(m.width).Height(m.height)
 	}
 	return m, nil
 }
@@ -114,27 +92,23 @@ func choicesView(m model) string {
 
 	var choices []string
 	for i, choice := range m.menuItems {
-
-		choiceStr := normalStyle.Render("[ ]  " + choice.name)
-
+		choiceStr := constants.NormalStyle.Render("[ ]  " + choice.name)
 		if m.cursor == i {
-			choiceStr = selectedStyle.Render("[x]  " + choice.name)
+			choiceStr = constants.SelectedStyle.Render("[x]  " + choice.name)
 		}
-
 		choices = append(choices, choiceStr)
 	}
 
 	menuSelect := lipgloss.JoinVertical(lipgloss.Left, choices...)
-
-	footer := subtleStyle.Render("up ↑ / down ↓ : select | enter: choose | q, esc: quit")
+	footer := constants.SubtleStyle.Render("up ↑ / down ↓ : select | enter: choose | q, esc: quit")
 
 	view := lipgloss.JoinVertical(lipgloss.Center,
-		titleStyle.Render(title),
+		constants.TitleStyle.Render(title),
 		menuSelect,
-		subtleStyle.Render(footer),
+		constants.SubtleStyle.Render(footer),
 	)
 
-	fullScreen := backgroundStyle.Render(
+	fullScreen := constants.BackgroundStyle.Render(
 		lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, view, lipgloss.WithWhitespaceChars(" ")),
 	)
 
@@ -143,24 +117,15 @@ func choicesView(m model) string {
 
 func (m model) View() string {
 	var view string
-
 	switch m.mode {
 	case modeMenu:
 		view = choicesView(m)
-	case modeSinglePlayer:
-		view = messageStyle.Render("Single Player Mode Selected")
-	case modeMultiPlayer:
-		view = messageStyle.Render("Multiplayer Mode Selected")
-	case modeStats:
-		view = messageStyle.Render("Game Stats: \n\n- Wins: 10\n- Losses: 5\n- Draws: 2") // Example stats
 	}
-
 	fullScreen := lipgloss.NewStyle().Align(lipgloss.Center).Render(
-		backgroundStyle.Render(
+		constants.BackgroundStyle.Render(
 			lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, view),
 		),
 	)
-
 	return fullScreen
 }
 
