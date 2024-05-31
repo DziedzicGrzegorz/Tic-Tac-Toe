@@ -40,15 +40,15 @@ func (m *GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "up", "k":
+		case constants.Up:
 			m.moveCursor(-3)
-		case "down", "j":
+		case constants.Down:
 			m.moveCursor(3)
-		case "left", "h":
+		case constants.Left:
 			m.moveCursor(-1)
-		case "right", "l":
+		case constants.Right:
 			m.moveCursor(1)
-		case "enter":
+		case constants.Enter:
 			if !m.placeMarker() {
 				m.errorMessage = "Cannot overwrite existing marker!"
 			} else {
@@ -72,7 +72,7 @@ func (m *GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.switchPlayer()
 			}
-		case "ctrl+c", "q", "esc":
+		case constants.CtrlC, constants.Esc:
 			return m, tea.Quit
 		}
 
@@ -199,7 +199,7 @@ func (m *GameModel) renderBoard() string {
 	header := constants.HeaderStyle.Render(currentPlayer)
 
 	// Quick help
-	footer := constants.SubtleStyle.Render("j/k, up/down: move | h/l, left/right: move | enter: select | ctrl+c: quit")
+	footer := constants.SubtleStyle.Render("arrow keys: move | enter: select | ctrl+c or Esc: quit")
 
 	// Joining all cells horizontally
 	board := lipgloss.JoinVertical(lipgloss.Left,

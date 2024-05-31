@@ -57,7 +57,7 @@ func (m TCPmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case constants.CtrlC, constants.Quit:
+		case constants.CtrlC, constants.Esc:
 			return m, tea.Quit
 
 		case constants.Up:
@@ -162,7 +162,7 @@ func (m TCPmodel) View() string {
 	header := constants.HeaderStyle.Render(currentPlayer)
 
 	// Instructions
-	footer := constants.SubtleStyle.Render("j/k, up/down: move | h/l, left/right: move | enter: select | ctrl+c: quit")
+	footer := constants.SubtleStyle.Render("arrow keys: move | enter: select | ctrl+c or Esc: quit")
 
 	// Joining all cells horizontally
 	board := lipgloss.JoinVertical(lipgloss.Left,
